@@ -3,10 +3,24 @@
 {% block body %}
 
     <h2>{{ listing.title }}</h2>
+    {% if listing.image_url %}
+        <img class="card-img-top" src="{{ listing.image_url }}" alt="{{ listing.title }}">
+    {% endif %}
+    <div>
+        <p>{{ listing.text_description }}</p>
+        <p>Show Current Price</p>
 
-    <!-- (at minimum) the title, description, current price, and photo (if one exists for the listing). -->
-
-    <!-- current price for the listing. -->
+        {% if user.is_authenticated %}
+            <div class="actions">
+                <a href="{% url 'addToWatchlist' listing.id %}" class="btn btn-primary">Add to Watchlist</a>
+            </div>
+            <form action="{% url 'listing' listing.id %}" method="post">
+                {% csrf_token %}
+                {{ form }}
+                <input type="submit" value="Bid">
+            </form>
+        {% endif %}
+    </div>
 
     
 
