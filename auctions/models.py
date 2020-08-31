@@ -6,14 +6,20 @@ from django.db import models
 # python manage.py makemigrations and then python manage.py migrate
 
 
-# https://stackoverflow.com/questions/16178693/django-foreignkey-issue-related-class-not-found
+# User is in quotes as it has not yet been defined before the Listing model, lazy reference
+class Bids(models.Model):
+    pass
+
+class User(AbstractUser):
+    watchlist = models.ForeignKey('Listing', on_delete=models.CASCADE, related_name="watchlist", default=None, null=True, blank=True)
 
 class Listing(models.Model):
     title = models.CharField(max_length=64)
     text_description = models.CharField(max_length=128)
     starting_bid = models.PositiveIntegerField()
     image_url = models.CharField(max_length=128)
-    createdBy = models.ForeignKey(User, on_delete=models.CASCADE, related_name="createdBy")
+    createdBy = models.ForeignKey(User, on_delete=models.CASCADE, related_name="createdBy",default=None, null=True, blank=True)
+    bids = models.ManyToManyField(Bids, blank=True, related_name="Bids")
     # category (not sure)
 
     
@@ -21,12 +27,10 @@ class Listing(models.Model):
         return f"{self.title} has been added"
     
 
-class User(AbstractUser):
-    watchlist = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="watchlist", default=None, null=True, blank=True)
 
 
-class Bids(models.Model):
-    pass
+
+
 
 class Comments(models.Model):
     pass

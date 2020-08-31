@@ -19,6 +19,7 @@
             <div class="form-group">
                 <input autofocus class="form-control" type="url" name="url" placeholder="Image URL">
             </div>
+            <input type="hidden" name="user_id" value="{{ user.id }}">
             <input class="btn btn-primary" type="submit" value="Add Listing">
         </form>
     {% else %}

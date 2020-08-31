@@ -74,7 +74,8 @@ def add(request):
         description = request.POST["description"]
         bid = request.POST["bid"]
         url = request.POST["url"]
-        f = Listing(title = title, text_description=description, starting_bid=bid, image_url=url)
+        user = User.objects.get(id=request.POST["user_id"])
+        f = Listing(title = title, text_description=description, starting_bid=bid, image_url=url, createdBy=user)
         f.save()
         return HttpResponseRedirect(reverse("index"))
     else:
@@ -90,6 +91,8 @@ def listing(request, listing_id):
 
 def addToWatchlist(request, listing_id):
     listing = Listing.objects.get(id=listing_id)
+
+
 
     # Render the user watchlist?
     # Then render listings that are related to that user somehow...?

@@ -13,6 +13,7 @@
         {% if user.is_authenticated %}
             <div class="actions">
                 <a href="{% url 'addToWatchlist' listing.id %}" class="btn btn-primary">Add to Watchlist</a>
+                <a href="{% url 'closeListing' listing.id %}" class="btn btn-danger">Close Listing</a>
             </div>
             <form action="{% url 'listing' listing.id %}" method="post">
                 {% csrf_token %}
