@@ -77,7 +77,7 @@ def add(request):
         bid = request.POST["bid"]
         url = request.POST["url"]
         user = User.objects.get(id=request.POST["user_id"])
-        f = Listing(title = title, text_description=description, starting_bid=bid, image_url=url, createdBy=user)
+        f = Listing(title = title, text_description=description, starting_bid=bid, image_url=url, created_by=user)
         f.save()
         return HttpResponseRedirect(reverse("index"))
     else:
@@ -86,21 +86,56 @@ def add(request):
 
 def listing(request, listing_id):
     listing = Listing.objects.get(id=listing_id)
-    if request.method == "POST":
+    current_user = request.user
+    user_watchlist = Listing.objects.filter(watchlist=request.user.id)
+    created_by = User.objects.filter(created_by=listing_id).values('username')
+    in_watchlist = False
 
+    if request.method == "POST":
         if 'closeListing' in request.POST and request.POST['closeListing']:
             listing.delete()
             return HttpResponseRedirect(reverse("index"))
-        elif 'addToWatchList' in request.POST and request.POST['addToWatchList']:
-            current_user = request.user
+        elif 'addToWatchlist' in request.POST and request.POST['addToWatchlist']:
             current_user.watchlist.add(listing)
-            print( current_user.watchlist )
             return HttpResponseRedirect(reverse("index"))
-    else:
+        elif 'removeFromWatchlist' in request.POST and request.POST['removeFromWatchlist']:
+            current_user.watchlist.remove(listing)
+            return HttpResponseRedirect(reverse("index"))
+    elif listing in user_watchlist:
+        print('Found')
+        print(created_by, current_user)
+
+        # so how can one find out if user equals created_by...
         return render(request, "auctions/listing.html", {
             "listing": listing,
+            "in_watchlist": True,
+            "created_by": created_by,
             "form": NewBidForm()
         })
+    # if listing is in user watchlist...
+    #     render the listing with a button to remove from watchlist instead:
+    else:
+        print( 'last')
+        print(current_user.watchlist)
+        return render(request, "auctions/listing.html", {
+            "listing": listing,
+            "created_by": created_by,
+            "form": NewBidForm()
+        })
+
+@login_required
+def watchlist(request):
+    listings = Listing.objects.filter(watchlist=request.user.id)
+    current_user = request.user
+    print( listings )
+    return render(request, "auctions/watchlist.html", {
+        "listings": listings
+    })
+        
+
+# def profile(request):
+#     current_user = request.user
+#     Use createdby to display listings created by the user...
 
 # @login_required
 # def addToWatchlist(request, listing_id):
@@ -108,15 +143,7 @@ def listing(request, listing_id):
     
 #     print(current_user)
 
-@login_required
-def watchlist(request):
-    listings = Listing.objects.all()
-    current_user = request.user
-    print( current_user.watchlist )
-    return render(request, "auctions/watchlist.html", {
-        "listings": listings
-    })
-        
+
 
 
 # def closeListing(request, listing_id):

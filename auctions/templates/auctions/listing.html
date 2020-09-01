@@ -12,14 +12,24 @@
 
         {% if user.is_authenticated %}
             <div class="actions">
-
-                <form action="{% url 'listing' listing.id %}" method="post">
-                    {% csrf_token %}
-                    <input type="submit" name="addToWatchlist" class="btn btn-primary" value="Add to Watchlist">
-                    <input type="submit" name="closeListing" class="btn btn-danger" value="Close Listing">
-                </form>
-                
-            
+                {% if in_watchlist %}
+                    <form action="{% url 'listing' listing.id %}" method="post">
+                        {% csrf_token %}
+                        <input type="submit" name="removeFromWatchlist" class="btn btn-primary" value="Remove from Watchlist">
+                        
+                        {% if created_by == user %}
+                            <input type="submit" name="closeListing" class="btn btn-danger" value="Close Listing">
+                        {% endif %}
+                    </form>
+                {% else %}
+                    <form action="{% url 'listing' listing.id %}" method="post">
+                        {% csrf_token %}
+                        <input type="submit" name="addToWatchlist" class="btn btn-primary" value="Add to Watchlist">
+                        {% if created_by == user %}
+                            <input type="submit" name="closeListing" class="btn btn-danger" value="Close Listing">
+                        {% endif %}
+                    </form>
+                {% endif %}
             </div>
             <form action="{% url 'listing' listing.id %}" method="post">
                 {% csrf_token %}
@@ -27,6 +37,7 @@
                 <input type="submit" value="Bid">
             </form>
         {% endif %}
+
     </div>
 
 {% endblock %}

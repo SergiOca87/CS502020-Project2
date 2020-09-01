@@ -18,7 +18,7 @@ class Listing(models.Model):
     text_description = models.CharField(max_length=128)
     starting_bid = models.PositiveIntegerField()
     image_url = models.CharField(max_length=128)
-    createdBy = models.ForeignKey(User, on_delete=models.CASCADE, related_name="createdBy",default=None, null=True, blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="created_by",default=None, null=True, blank=True)
     bids = models.ManyToManyField(Bids, blank=True, related_name="Bids")
     # category (not sure)
 
