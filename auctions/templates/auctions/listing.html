@@ -8,7 +8,13 @@
     {% endif %}
     <div>
         <p>{{ listing.text_description }}</p>
-        <p>Show Current Price</p>
+        <p>Starting bid: {{ listing.starting_bid }}$</p>
+
+        {% if bids > listing.starting_bid %}
+            <p>Latest Bid: {{ bids }}</p>
+        {% else %}
+            <p>No bids for this listing yet</p>
+        {% endif %}
 
         {% if user.is_authenticated %}
             <div class="actions">
@@ -16,7 +22,6 @@
                     <form action="{% url 'listing' listing.id %}" method="post">
                         {% csrf_token %}
                         <input type="submit" name="removeFromWatchlist" class="btn btn-primary" value="Remove from Watchlist">
-                        
                         {% if created_by == user %}
                             <input type="submit" name="closeListing" class="btn btn-danger" value="Close Listing">
                         {% endif %}
@@ -25,7 +30,8 @@
                     <form action="{% url 'listing' listing.id %}" method="post">
                         {% csrf_token %}
                         <input type="submit" name="addToWatchlist" class="btn btn-primary" value="Add to Watchlist">
-                        {% if created_by == user %}
+                        {{ created_by }}{{ user }}
+                        {% if user in created_by %}
                             <input type="submit" name="closeListing" class="btn btn-danger" value="Close Listing">
                         {% endif %}
                     </form>
@@ -34,10 +40,11 @@
             <form action="{% url 'listing' listing.id %}" method="post">
                 {% csrf_token %}
                 {{ form }}
-                <input type="submit" value="Bid">
+                <input type="submit" value="Bid" name="bid">
             </form>
         {% endif %}
 
+        <p>Listing created by <strong>{{ created_by }}</strong></p>
     </div>
 
 {% endblock %}

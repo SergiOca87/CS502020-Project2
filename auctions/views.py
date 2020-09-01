@@ -88,7 +88,7 @@ def listing(request, listing_id):
     listing = Listing.objects.get(id=listing_id)
     current_user = request.user
     user_watchlist = Listing.objects.filter(watchlist=request.user.id)
-    created_by = User.objects.filter(created_by=listing_id).values('username')
+    created_by = list(User.objects.filter(created_by=listing_id))
     in_watchlist = False
 
     if request.method == "POST":
@@ -109,11 +109,10 @@ def listing(request, listing_id):
         return render(request, "auctions/listing.html", {
             "listing": listing,
             "in_watchlist": True,
-            "created_by": created_by,
+            "created_by": created_by[0],
             "form": NewBidForm()
         })
-    # if listing is in user watchlist...
-    #     render the listing with a button to remove from watchlist instead:
+
     else:
         print( 'last')
         print(current_user.watchlist)
