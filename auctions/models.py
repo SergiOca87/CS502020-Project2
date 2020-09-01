@@ -11,7 +11,7 @@ class Bids(models.Model):
     pass
 
 class User(AbstractUser):
-    watchlist = models.ForeignKey('Listing', on_delete=models.CASCADE, related_name="watchlist", default=None, null=True, blank=True)
+    watchlist = models.ManyToManyField('Listing', blank=True, related_name="watchlist")
 
 class Listing(models.Model):
     title = models.CharField(max_length=64)
@@ -26,10 +26,6 @@ class Listing(models.Model):
     def __str__(self):
         return f"{self.title} has been added"
     
-
-
-
-
 
 
 class Comments(models.Model):

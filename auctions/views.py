@@ -4,6 +4,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django import forms
+from django.contrib.auth.decorators import login_required
 
 from .models import User, Listing
 
@@ -68,6 +69,7 @@ def register(request):
     else:
         return render(request, "auctions/register.html")
 
+@login_required
 def add(request):
     if request.method == "POST":
         title = request.POST["title"]
@@ -84,14 +86,41 @@ def add(request):
 
 def listing(request, listing_id):
     listing = Listing.objects.get(id=listing_id)
-    return render(request, "auctions/listing.html", {
-        "listing": listing,
-        "form": NewBidForm()
+    if request.method == "POST":
+
+        if 'closeListing' in request.POST and request.POST['closeListing']:
+            listing.delete()
+            return HttpResponseRedirect(reverse("index"))
+        elif 'addToWatchList' in request.POST and request.POST['addToWatchList']:
+            current_user = request.user
+            current_user.watchlist.add(listing)
+            print( current_user.watchlist )
+            return HttpResponseRedirect(reverse("index"))
+    else:
+        return render(request, "auctions/listing.html", {
+            "listing": listing,
+            "form": NewBidForm()
+        })
+
+# @login_required
+# def addToWatchlist(request, listing_id):
+#     listing = Listing.objects.get(id=listing_id)
+    
+#     print(current_user)
+
+@login_required
+def watchlist(request):
+    listings = Listing.objects.all()
+    current_user = request.user
+    print( current_user.watchlist )
+    return render(request, "auctions/watchlist.html", {
+        "listings": listings
     })
+        
 
-def addToWatchlist(request, listing_id):
-    listing = Listing.objects.get(id=listing_id)
 
+# def closeListing(request, listing_id):
+    
 
 
     # Render the user watchlist?
