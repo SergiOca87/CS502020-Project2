@@ -16,6 +16,12 @@
             <p>No bids for this listing yet</p>
         {% endif %}
 
+        listing bids:
+        {% for bids in bid %}
+            <p>{{ bid }}</p>
+        {% endfor %}
+
+
         {% if user.is_authenticated %}
             <div class="actions">
                 {% if in_watchlist %}
@@ -30,13 +36,15 @@
                     <form action="{% url 'listing' listing.id %}" method="post">
                         {% csrf_token %}
                         <input type="submit" name="addToWatchlist" class="btn btn-primary" value="Add to Watchlist">
-                        {{ created_by }}{{ user }}
-                        {% if user in created_by %}
+                        {% if created_by == user %}
                             <input type="submit" name="closeListing" class="btn btn-danger" value="Close Listing">
                         {% endif %}
                     </form>
                 {% endif %}
             </div>
+            {% if message %}
+                <p class="alert">{{ message }}</p>
+            {% endif %}
             <form action="{% url 'listing' listing.id %}" method="post">
                 {% csrf_token %}
                 {{ form }}

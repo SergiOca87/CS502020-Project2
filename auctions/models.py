@@ -21,7 +21,7 @@ class Listing(models.Model):
     starting_bid = models.PositiveIntegerField()
     image_url = models.CharField(max_length=128)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="created_by", default=None, null=True, blank=True)
-    bids = models.ManyToManyField(Bids, blank=True, related_name="Bids")
+    bids = models.ManyToManyField(Bids, blank=True, related_name="bids")
     category = models.CharField(max_length=64, default=None, null=True, blank=True)
 
     

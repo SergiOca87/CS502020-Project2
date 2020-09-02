@@ -6,10 +6,10 @@ from django.urls import reverse
 from django import forms
 from django.contrib.auth.decorators import login_required
 
-from .models import User, Listing
+from .models import User, Listing, Bids
 
 class NewBidForm(forms.Form):
-    bid = forms.IntegerField()
+    amount = forms.IntegerField()
 
 def index(request):
     listings = Listing.objects.all()
@@ -90,6 +90,7 @@ def listing(request, listing_id):
     user_watchlist = Listing.objects.filter(watchlist=request.user.id)
     created_by = list(User.objects.filter(created_by=listing_id))
     in_watchlist = False
+    listing_bids = Bids.objects.filter(bids=listing)
 
     if request.method == "POST":
         if 'closeListing' in request.POST and request.POST['closeListing']:
@@ -101,25 +102,47 @@ def listing(request, listing_id):
         elif 'removeFromWatchlist' in request.POST and request.POST['removeFromWatchlist']:
             current_user.watchlist.remove(listing)
             return HttpResponseRedirect(reverse("index"))
-    elif listing in user_watchlist:
-        print('Found')
-        print(created_by, current_user)
+        elif 'bid' in request.POST and request.POST['bid']:
+            form = NewBidForm(request.POST)
+            if form.is_valid():
+                amount = form.cleaned_data["amount"]
+              
+                # if bid is lower than starting bid or current biggest bid, return the same page with an error message
+                if amount <= listing.starting_bid:
+                    return render(request, "auctions/listing.html", {
+                        "listing": listing,
+                        "created_by": created_by[0],
+                        "message": "The bid must be higher than the starting price or the current bid, if any",
+                        "form": NewBidForm()
+                    })  
+                else:
+                    f = Bids( amount = amount, bid_by = current_user, bid_on = listing )
+                    f.save()
+                    listing.bids.add(f)
+                    return render(request, "auctions/listing.html", {
+                        "listing": listing,
+                        "created_by": created_by[0],
+                        "message": "Thank you, the bid was placed correctly",
+                        "form": NewBidForm()
+                    })  
 
-        # so how can one find out if user equals created_by...
+    # How to iterate the bids queryset?
+
+    elif listing in user_watchlist:
         return render(request, "auctions/listing.html", {
             "listing": listing,
             "in_watchlist": True,
             "created_by": created_by[0],
-            "form": NewBidForm()
+            "form": NewBidForm(),
+            "bids": listing_bids
         })
-
     else:
-        print( 'last')
-        print(current_user.watchlist)
+        print( listing_bids )
         return render(request, "auctions/listing.html", {
             "listing": listing,
-            "created_by": created_by,
-            "form": NewBidForm()
+            "created_by": created_by[0],
+            "form": NewBidForm(),
+            "bids": listing_bids
         })
 
 @login_required
