@@ -91,6 +91,13 @@ def listing(request, listing_id):
     created_by = list(User.objects.filter(created_by=listing_id))
     in_watchlist = False
     listing_bids = Bids.objects.filter(bids=listing)
+    highest_bid = 0
+
+    for bid in listing_bids:
+        if bid.amount > highest_bid:
+            highest_bid = bid.amount
+        else:
+            highest_bid = highest_bid
 
     if request.method == "POST":
         if 'closeListing' in request.POST and request.POST['closeListing']:
@@ -108,33 +115,37 @@ def listing(request, listing_id):
                 amount = form.cleaned_data["amount"]
               
                 # if bid is lower than starting bid or current biggest bid, return the same page with an error message
-                if amount <= listing.starting_bid:
+                if amount <= listing.starting_bid or amount <= highest_bid:
                     return render(request, "auctions/listing.html", {
                         "listing": listing,
                         "created_by": created_by[0],
                         "message": "The bid must be higher than the starting price or the current bid, if any",
-                        "form": NewBidForm()
+                        "form": NewBidForm(),
+                        "highest_bid": highest_bid
                     })  
                 else:
+                    # this should be aredirect, to see the new bid
                     f = Bids( amount = amount, bid_by = current_user, bid_on = listing )
                     f.save()
                     listing.bids.add(f)
                     return render(request, "auctions/listing.html", {
                         "listing": listing,
                         "created_by": created_by[0],
+                        "highest_bid": highest_bid,
                         "message": "Thank you, the bid was placed correctly",
-                        "form": NewBidForm()
+                        "form": NewBidForm(),
                     })  
 
     # How to iterate the bids queryset?
 
     elif listing in user_watchlist:
+        print( listing_bids )
         return render(request, "auctions/listing.html", {
             "listing": listing,
             "in_watchlist": True,
             "created_by": created_by[0],
             "form": NewBidForm(),
-            "bids": listing_bids
+            "highest_bid": highest_bid
         })
     else:
         print( listing_bids )
@@ -142,7 +153,7 @@ def listing(request, listing_id):
             "listing": listing,
             "created_by": created_by[0],
             "form": NewBidForm(),
-            "bids": listing_bids
+            "highest_bid": highest_bid
         })
 
 @login_required
