@@ -8,42 +8,51 @@
     {% endif %}
     <div>
         <p>{{ listing.text_description }}</p>
-        <p>Starting bid: {{ listing.starting_bid }}$</p>
 
-        {{ highest_bid }}
-       
+        {% if listing.is_active  %}
+            <p>Starting bid: {{ listing.starting_bid }}$</p>
 
-        {% if user.is_authenticated %}
-            <div class="actions">
-                {% if in_watchlist %}
-                    <form action="{% url 'listing' listing.id %}" method="post">
-                        {% csrf_token %}
-                        <input type="submit" name="removeFromWatchlist" class="btn btn-primary" value="Remove from Watchlist">
-                        {% if created_by == user %}
-                            <input type="submit" name="closeListing" class="btn btn-danger" value="Close Listing">
-                        {% endif %}
-                    </form>
-                {% else %}
-                    <form action="{% url 'listing' listing.id %}" method="post">
-                        {% csrf_token %}
-                        <input type="submit" name="addToWatchlist" class="btn btn-primary" value="Add to Watchlist">
-                        {% if created_by == user %}
-                            <input type="submit" name="closeListing" class="btn btn-danger" value="Close Listing">
-                        {% endif %}
-                    </form>
-                {% endif %}
-            </div>
-            {% if message %}
-                <p class="alert">{{ message }}</p>
+            {% if highest_bid > 0  and bid_by is not None%}
+                <p>Highest bid: {{ highest_bid }}$ by {{ bid_by }}</p>
+                <p></p>
             {% endif %}
-            <form action="{% url 'listing' listing.id %}" method="post">
-                {% csrf_token %}
-                {{ form }}
-                <input type="submit" value="Bid" name="bid">
-            </form>
+           
+            <!-- <p>Bid by {{ bid_by }}</p> -->
+        
+            {% if user.is_authenticated %}
+                <div class="actions">
+                    {% if in_watchlist %}
+                        <form action="{% url 'listing' listing.id %}" method="post">
+                            {% csrf_token %}
+                            <input type="submit" name="removeFromWatchlist" class="btn btn-primary" value="Remove from Watchlist">
+                            {% if created_by == user %}
+                                <input type="submit" name="closeListing" class="btn btn-danger" value="Close Listing">
+                            {% endif %}
+                        </form>
+                    {% else %}
+                        <form action="{% url 'listing' listing.id %}" method="post">
+                            {% csrf_token %}
+                            <input type="submit" name="addToWatchlist" class="btn btn-primary" value="Add to Watchlist">
+                            {% if created_by == user %}
+                                <input type="submit" name="closeListing" class="btn btn-danger" value="Close Listing">
+                            {% endif %}
+                        </form>
+                    {% endif %}
+                </div>
+                {% if message %}
+                    <p class="alert">{{ message }}</p>
+                {% endif %}
+                <form action="{% url 'listing' listing.id %}" method="post">
+                    {% csrf_token %}
+                    {{ form }}
+                    <input type="submit" value="Bid" name="bid">
+                </form>
+            {% endif %}
+        {% elif listing.is_active is False and user == listing.won_by %}          
+            <p>Congratulations <strong>{{ listing.won_by }}</strong>, you have won this bid</p>
         {% endif %}
 
-        <p>Listing created by <strong>{{ created_by }}</strong></p>
+            <p>Listing created by <strong>{{ created_by }}</strong></p>
     </div>
 
 {% endblock %}

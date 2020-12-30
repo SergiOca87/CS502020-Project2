@@ -91,17 +91,27 @@ def listing(request, listing_id):
     created_by = list(User.objects.filter(created_by=listing_id))
     in_watchlist = False
     listing_bids = Bids.objects.filter(bids=listing)
+    latest_bid = listing_bids.last()
+
+    if latest_bid:
+        bid_by = latest_bid.bid_by
+
+    print(bid_by.id)
+
     highest_bid = 0
 
     for bid in listing_bids:
         if bid.amount > highest_bid:
             highest_bid = bid.amount
+            # bid_by = User.objects.filter(bid_by=bid_by.id) 
         else:
             highest_bid = highest_bid
 
     if request.method == "POST":
         if 'closeListing' in request.POST and request.POST['closeListing']:
-            listing.delete()
+            listing.is_active = False
+            listing.won_by = User.objects.get(id=bid_by.id)
+            listing.save()
             return HttpResponseRedirect(reverse("index"))
         elif 'addToWatchlist' in request.POST and request.POST['addToWatchlist']:
             current_user.watchlist.add(listing)
@@ -120,23 +130,22 @@ def listing(request, listing_id):
                         "listing": listing,
                         "created_by": created_by[0],
                         "message": "The bid must be higher than the starting price or the current bid, if any",
-                        "form": NewBidForm(),
-                        "highest_bid": highest_bid
+                        "form": NewBidForm()
                     })  
                 else:
-                    # this should be aredirect, to see the new bid
                     f = Bids( amount = amount, bid_by = current_user, bid_on = listing )
                     f.save()
                     listing.bids.add(f)
+                    bid_by = f.bid_by
                     return render(request, "auctions/listing.html", {
                         "listing": listing,
                         "created_by": created_by[0],
                         "highest_bid": highest_bid,
                         "message": "Thank you, the bid was placed correctly",
                         "form": NewBidForm(),
+                        "bid_by": bid_by
                     })  
 
-    # How to iterate the bids queryset?
 
     elif listing in user_watchlist:
         print( listing_bids )
@@ -153,7 +162,9 @@ def listing(request, listing_id):
             "listing": listing,
             "created_by": created_by[0],
             "form": NewBidForm(),
-            "highest_bid": highest_bid
+            "highest_bid": highest_bid,
+            "latest_bid": latest_bid,
+            "bid_by": bid_by
         })
 
 @login_required
@@ -164,64 +175,3 @@ def watchlist(request):
     return render(request, "auctions/watchlist.html", {
         "listings": listings
     })
-        
-
-# def profile(request):
-#     current_user = request.user
-#     Use createdby to display listings created by the user...
-
-# @login_required
-# def addToWatchlist(request, listing_id):
-#     listing = Listing.objects.get(id=listing_id)
-    
-#     print(current_user)
-
-
-
-
-# def closeListing(request, listing_id):
-    
-
-
-    # Render the user watchlist?
-    # Then render listings that are related to that user somehow...?
-
-# def placeBid(request):
-#     if request.method == "POST":
-#         listing = Listing.objects.get(id=listing_id)
-#         form = NewBidForm(request.POST)
-#         if form.is_valid():
-#             bid = form.cleaned_data["bid"]
-
-#             # Check if bid is lower than current price 
-#             if bid <= listing.current_price:
-#                 return render(request, "auctions/listing.html", {
-#                     "listing": listing,
-#                     "form": NewBidForm(),
-#                     "message": "Bid was lower than current listing price"
-#                 })
-#             else :
-#                 # Create the bid
-#                 f = Bids(amount=bid)
-#                 f.save
-
-#                 # Add bid amount to listing current price
-#                 listing.current_price += bid
-#                 return render(request, "auctions/listing.html", {
-#                     "listing": listing,
-#                     "form": NewBidForm(),
-#                     "message": "Bid was successful"
-#                 })
-#     else:
-#         return render(request, "auctions/listing.html", {
-#             "listing": listing,
-#             "form": NewBidForm(),
-#             "message": "There was a problem with the proided amount"
-#         })
-    # else:
-    #     listing = Listing.objects.get(id=listing_id)
-    #     return render(request, "auctions/listing.html", {
-    #         "listing": listing,
-    #         "form": NewBidForm()
-    #     })
-    

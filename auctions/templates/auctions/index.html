@@ -6,16 +6,18 @@
     <!-- All Active listings here? -->
     <ul>
         {% for listing in listings %}
-            <li class="card">
-                {% if listing.image_url %}
-                    <img class="card-img-top" src="{{ listing.image_url }}" alt="{{ listing.title }}">
-                {% endif %}
-                <div class="card-body">
-                    <h5 class="card-title">{{ listing.title }}</h5>
-                    <p class="card-text">{{ listing.text_description }}</p>
-                    <a href="{% url 'listing' listing.id %}" class="btn btn-primary">Listing Details</a>
-                </div>
-            </li>
+            {% if listing.is_active %}
+                <li class="card">
+                    {% if listing.image_url %}
+                        <img class="card-img-top" src="{{ listing.image_url }}" alt="{{ listing.title }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ listing.title }}</h5>
+                        <p class="card-text">{{ listing.text_description }}</p>
+                        <a href="{% url 'listing' listing.id %}" class="btn btn-primary">Listing Details</a>
+                    </div>
+                </li>
+            {% endif %}
         {% endfor %}
     </ul>
 {% endblock %}

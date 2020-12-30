@@ -23,12 +23,13 @@ class Listing(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="created_by", default=None, null=True, blank=True)
     bids = models.ManyToManyField(Bids, blank=True, related_name="bids")
     category = models.CharField(max_length=64, default=None, null=True, blank=True)
-
+    is_active = models.BooleanField(default=True, null=True, blank=True)
+    won_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="won_by", default=None, null=True, blank=True)
     
     def __str__(self):
         return f"{self.title} has been added"
     
-
-class Comments(models.Model):
-    pass
-    # related to listing
+class Comment(models.Model):
+    text = models.CharField(max_length=128)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="author", default=None, null=True, blank=True)
+    comment_on = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="comment_on", default=None, null=True, blank=True)
