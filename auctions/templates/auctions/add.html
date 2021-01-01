@@ -2,32 +2,34 @@
 
 {% block body %}
 
-    <h2>Add Listing</h2>
+    <div class="form-wrap">
+        <h2 class="mb-3">Add Listing</h2>
 
-    {% if user.is_authenticated %}
-        <form action="{% url 'add' %}" method="post">
-            {% csrf_token %}
-            <div class="form-group">
-                <input autofocus class="form-control" type="text" name="title" placeholder="Title" required>
-            </div>
-            <div class="form-group">
-                <textarea class="form-control" type="textarea" name="description" placeholder="Description" rows="3" required></textarea>
-            </div>
-            <div class="form-group">
-                <input autofocus class="form-control" type="number" name="bid" placeholder="Starting Bid" required>
-            </div>
-            <div class="form-group">
-                <input autofocus class="form-control" type="url" name="url" placeholder="Image URL">
-            </div>
-            <div class="form-group">
-                <input autofocus class="form-control" type="text" name="category" placeholder="Category">
-            </div>
-            <input type="hidden" name="user_id" value="{{ user.id }}">
-            <input class="btn btn-primary" type="submit" value="Add Listing">
-        </form>
-    {% else %}
-        <p>Please <a href="{% url 'login' %}">Sign In</a> or <a href="{% url 'register' %}">Register </a>in order to add a listing.</p>
-    {% endif %}
+        {% if user.is_authenticated %}
+            <form action="{% url 'add' %}" method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <input autofocus class="form-control" type="text" name="title" placeholder="Title" required>
+                </div>
+                <div class="form-group">
+                    <textarea class="form-control" type="textarea" name="description" placeholder="Description" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <input autofocus class="form-control" type="number" name="bid" placeholder="Starting Bid" required>
+                </div>
+                <div class="form-group">
+                    <input autofocus class="form-control" type="url" name="url" placeholder="Image URL">
+                </div>
+                <div class="form-group">
+                    <input autofocus class="form-control" type="text" name="category" placeholder="Category">
+                </div>
+                <input type="hidden" name="user_id" value="{{ user.id }}">
+                <input class="btn btn-primary" type="submit" value="Add Listing">
+            </form>
+        {% else %}
+            <p>Please <a href="{% url 'login' %}">Sign In</a> or <a href="{% url 'register' %}">Register </a>in order to add a listing.</p>
+        {% endif %}
+    </div>
 
 
 {% endblock %}

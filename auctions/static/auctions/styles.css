@@ -1,3 +1,22 @@
 body {
-    padding: 10px;
+	padding: 10px;
+}
+
+.form-wrap {
+	max-width: 700px;
+	margin: 0 auto;
+}
+
+.card-img-top,
+.listing-item img {
+	max-width: 500px;
+	margin: 0 auto;
+}
+
+textarea {
+	max-height: 8rem;
+}
+
+label {
+	display: block;
 }

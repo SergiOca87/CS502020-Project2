@@ -2,57 +2,82 @@
 
 {% block body %}
 
-    <h2>{{ listing.title }}</h2>
-    {% if listing.image_url %}
-        <img class="card-img-top" src="{{ listing.image_url }}" alt="{{ listing.title }}">
-    {% endif %}
-    <div>
-        <p>{{ listing.text_description }}</p>
-
-        {% if listing.is_active  %}
-            <p>Starting bid: {{ listing.starting_bid }}$</p>
-
-            {% if highest_bid > 0  and bid_by is not None%}
-                <p>Highest bid: {{ highest_bid }}$ by {{ bid_by }}</p>
-                <p></p>
-            {% endif %}
-           
-            <!-- <p>Bid by {{ bid_by }}</p> -->
-        
-            {% if user.is_authenticated %}
-                <div class="actions">
-                    {% if in_watchlist %}
-                        <form action="{% url 'listing' listing.id %}" method="post">
-                            {% csrf_token %}
-                            <input type="submit" name="removeFromWatchlist" class="btn btn-primary" value="Remove from Watchlist">
-                            {% if created_by == user %}
-                                <input type="submit" name="closeListing" class="btn btn-danger" value="Close Listing">
-                            {% endif %}
-                        </form>
-                    {% else %}
-                        <form action="{% url 'listing' listing.id %}" method="post">
-                            {% csrf_token %}
-                            <input type="submit" name="addToWatchlist" class="btn btn-primary" value="Add to Watchlist">
-                            {% if created_by == user %}
-                                <input type="submit" name="closeListing" class="btn btn-danger" value="Close Listing">
-                            {% endif %}
-                        </form>
-                    {% endif %}
+    <div class="form-wrap">
+        <div class="listing-item">
+            <div class="d-flex justify-content-between">
+                <h2 class="mb-3">{{ listing.title }}</h2>
+                <p>Listing created by <strong>{{ created_by }}</strong></p>
+            </div>
+            {% if listing.image_url %}
+                <div class="text-center">
+                    <img src="{{ listing.image_url }}" alt="{{ listing.title }}">
                 </div>
-                {% if message %}
-                    <p class="alert">{{ message }}</p>
-                {% endif %}
-                <form action="{% url 'listing' listing.id %}" method="post">
-                    {% csrf_token %}
-                    {{ form }}
-                    <input type="submit" value="Bid" name="bid">
-                </form>
             {% endif %}
-        {% elif listing.is_active is False and user == listing.won_by %}          
-            <p>Congratulations <strong>{{ listing.won_by }}</strong>, you have won this bid</p>
-        {% endif %}
+            <div>
+                <p>{{ listing.text_description }}</p>
+               
+                {% if listing.is_active  %}
+                    <p><strong>Starting bid</strong>: {{ listing.starting_bid }}$</p>
 
-            <p>Listing created by <strong>{{ created_by }}</strong></p>
+                    {% if listing.highest_bid.amount > 0 %}
+                        <p><strong>Highest bid</strong>: {{ listing.highest_bid.amount }}$ <strong>by</strong> {{ listing.highest_bid.bid_by }}</p>
+                    {% endif %}
+
+                    {% if message %}
+                        <p class="alert">{{ message }}</p>
+                    {% endif %}
+                    {% if user.is_authenticated %}
+                        <form action="{% url 'listing' listing.id %}" method="post" class="mt-3">
+                            {% csrf_token %}
+                            {{ bid_form }}
+                            <input type="submit" value="Bid" name="bid">
+                        </form>
+                   
+                        <div class="actions mt-4 mb-4">
+                            {% if in_watchlist %}
+                                <form action="{% url 'listing' listing.id %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="submit" name="removeFromWatchlist" class="btn btn-primary" value="Remove from Watchlist">
+                                    {% if created_by == user %}
+                                        <input type="submit" name="closeListing" class="btn btn-danger" value="Close Listing">
+                                    {% endif %}
+                                </form>
+                            {% else %}
+                                <form action="{% url 'listing' listing.id %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="submit" name="addToWatchlist" class="btn btn-primary" value="Add to Watchlist">
+                                    {% if created_by == user %}
+                                        <input type="submit" name="closeListing" class="btn btn-danger" value="Close Listing">
+                                    {% endif %}
+                                </form>
+                            {% endif %}
+                        </div>
+                        
+                    {% endif %}
+                {% elif listing.is_active is False and user == listing.won_by %}          
+                    <p>Congratulations <strong>{{ listing.won_by }}</strong>, you have won this bid</p>
+                {% endif %}
+                <hr>
+                <h3 class="mb-2">Comments</h3>
+
+                <div class="list-group">
+                    {% for comment in comments %}  
+                        <div class="list-group-item list-group-item-action">
+                            <p class="mb-3">{{ comment.text }}</p>
+                            <p><strong>Author</strong>: {{ comment.author }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {% if user.is_authenticated %}
+                    <p class="mt-5"><strong>Add a new comment</strong>:</p>
+                    <form action="{% url 'listing' listing.id %}" method="post" class="mt-3">
+                        {% csrf_token %}
+                        {{ comment_form }}
+                        <input type="submit" value="Comment" name="comment">
+                    </form>
+                {% endif %}
+            </div>
+        </div>
     </div>
-
 {% endblock %}

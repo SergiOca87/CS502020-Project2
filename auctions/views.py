@@ -6,10 +6,13 @@ from django.urls import reverse
 from django import forms
 from django.contrib.auth.decorators import login_required
 
-from .models import User, Listing, Bids
+from .models import User, Listing, Bid, Category, Comment
 
 class NewBidForm(forms.Form):
-    amount = forms.IntegerField()
+    amount = forms.IntegerField(label='Bid Amount')
+
+class NewCommentForm(forms.Form):
+    text = forms.CharField(label='Comment Text', widget=forms.Textarea)
 
 def index(request):
     listings = Listing.objects.all()
@@ -20,13 +23,10 @@ def index(request):
 
 def login_view(request):
     if request.method == "POST":
-
-        # Attempt to sign user in
         username = request.POST["username"]
         password = request.POST["password"]
         user = authenticate(request, username=username, password=password)
 
-        # Check if authentication successful
         if user is not None:
             login(request, user)
             return HttpResponseRedirect(reverse("index"))
@@ -47,8 +47,6 @@ def register(request):
     if request.method == "POST":
         username = request.POST["username"]
         email = request.POST["email"]
-
-        # Ensure password matches confirmation
         password = request.POST["password"]
         confirmation = request.POST["confirmation"]
         if password != confirmation:
@@ -56,7 +54,6 @@ def register(request):
                 "message": "Passwords must match."
             })
 
-        # Attempt to create new user
         try:
             user = User.objects.create_user(username, email, password)
             user.save()
@@ -77,8 +74,14 @@ def add(request):
         bid = request.POST["bid"]
         url = request.POST["url"]
         user = User.objects.get(id=request.POST["user_id"])
+        category = request.POST["category"]
         f = Listing(title = title, text_description=description, starting_bid=bid, image_url=url, created_by=user)
+        c = Category(name = category)
         f.save()
+        c.save()
+        c.listings.add(f)
+        c.save()
+       
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "auctions/add.html")
@@ -88,29 +91,14 @@ def listing(request, listing_id):
     listing = Listing.objects.get(id=listing_id)
     current_user = request.user
     user_watchlist = Listing.objects.filter(watchlist=request.user.id)
-    created_by = list(User.objects.filter(created_by=listing_id))
     in_watchlist = False
-    listing_bids = Bids.objects.filter(bids=listing)
-    latest_bid = listing_bids.last()
-
-    if latest_bid:
-        bid_by = latest_bid.bid_by
-
-    print(bid_by.id)
-
-    highest_bid = 0
-
-    for bid in listing_bids:
-        if bid.amount > highest_bid:
-            highest_bid = bid.amount
-            # bid_by = User.objects.filter(bid_by=bid_by.id) 
-        else:
-            highest_bid = highest_bid
+    listing_bids = Bid.objects.filter(bids=listing)
+    comments = list(listing.comments.all())
 
     if request.method == "POST":
         if 'closeListing' in request.POST and request.POST['closeListing']:
             listing.is_active = False
-            listing.won_by = User.objects.get(id=bid_by.id)
+            listing.won_by = User.objects.get(id=listing.highest_bid.bid_by.id)
             listing.save()
             return HttpResponseRedirect(reverse("index"))
         elif 'addToWatchlist' in request.POST and request.POST['addToWatchlist']:
@@ -119,52 +107,78 @@ def listing(request, listing_id):
         elif 'removeFromWatchlist' in request.POST and request.POST['removeFromWatchlist']:
             current_user.watchlist.remove(listing)
             return HttpResponseRedirect(reverse("index"))
+        elif 'comment' in request.POST and request.POST['comment']:
+            comment_form = NewCommentForm(request.POST)
+            if comment_form.is_valid():
+                text = comment_form.cleaned_data["text"]
+                f = Comment( text = text, author = current_user)
+                f.save()
+                listing.comments.add(f)
+                listing.save()
+                return render(request, "auctions/listing.html", {
+                    "listing": listing,
+                    "created_by": listing.created_by,
+                    "message": "Thank you, the bid was placed correctly",
+                    "bid_form": NewBidForm(),
+                    "comment_form": NewCommentForm(),
+                    "comments": comments
+                })  
+
         elif 'bid' in request.POST and request.POST['bid']:
-            form = NewBidForm(request.POST)
-            if form.is_valid():
-                amount = form.cleaned_data["amount"]
-              
-                # if bid is lower than starting bid or current biggest bid, return the same page with an error message
-                if amount <= listing.starting_bid or amount <= highest_bid:
+            bid_form = NewBidForm(request.POST)
+            if bid_form.is_valid():
+                amount = bid_form.cleaned_data["amount"]
+
+                if amount <= listing.starting_bid:
                     return render(request, "auctions/listing.html", {
                         "listing": listing,
-                        "created_by": created_by[0],
-                        "message": "The bid must be higher than the starting price or the current bid, if any",
-                        "form": NewBidForm()
+                        "created_by": listing.created_by,
+                        "message": "The bid must be higher than the starting price",
+                        "bid_form": NewBidForm(),
+                        "comment_form": NewCommentForm(),
+                        "comments": comments
+                    })  
+                elif amount <= listing.highest_bid.amount :
+                    return render(request, "auctions/listing.html", {
+                        "listing": listing,
+                        "created_by": listing.created_by,
+                        "message": "The bid must be higher than the current bid",
+                        "bid_form": NewBidForm(),
+                        "comment_form": NewCommentForm(),
+                        "comments": comments
                     })  
                 else:
-                    f = Bids( amount = amount, bid_by = current_user, bid_on = listing )
+                    f = Bid( amount = amount, bid_by = current_user, bid_on = listing )
                     f.save()
                     listing.bids.add(f)
-                    bid_by = f.bid_by
+                    listing.highest_bid = Bid.objects.get(id=f.id)
+                    listing.save()
                     return render(request, "auctions/listing.html", {
                         "listing": listing,
-                        "created_by": created_by[0],
-                        "highest_bid": highest_bid,
+                        "created_by": listing.created_by,
                         "message": "Thank you, the bid was placed correctly",
-                        "form": NewBidForm(),
-                        "bid_by": bid_by
+                        "bid_form": NewBidForm(),
+                        "comment_form": NewCommentForm(),
+                        "comments": comments
                     })  
 
 
     elif listing in user_watchlist:
-        print( listing_bids )
         return render(request, "auctions/listing.html", {
             "listing": listing,
             "in_watchlist": True,
-            "created_by": created_by[0],
-            "form": NewBidForm(),
-            "highest_bid": highest_bid
+            "created_by": listing.created_by,
+            "bid_form": NewBidForm(),
+            "comment_form": NewCommentForm(),
+            "comments": comments
         })
     else:
-        print( listing_bids )
         return render(request, "auctions/listing.html", {
             "listing": listing,
-            "created_by": created_by[0],
-            "form": NewBidForm(),
-            "highest_bid": highest_bid,
-            "latest_bid": latest_bid,
-            "bid_by": bid_by
+            "created_by": listing.created_by,
+            "bid_form": NewBidForm(),
+            "comment_form": NewCommentForm(),
+            "comments": comments
         })
 
 @login_required
@@ -173,5 +187,21 @@ def watchlist(request):
     current_user = request.user
     print( listings )
     return render(request, "auctions/watchlist.html", {
+        "listings": listings
+    })
+
+
+def categories(request):
+    categories = Category.objects.all()
+    return render(request, "auctions/categories.html", {
+        "categories": categories
+    })
+
+
+def category(request, category_id):
+    category = Category.objects.get(id=category_id)
+    listings = list(category.listings.all())
+    return render(request, "auctions/category.html", {
+        "category": category,
         "listings": listings
     })

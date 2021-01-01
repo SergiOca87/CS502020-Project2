@@ -1,21 +1,33 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
-    <h2>{{ user }}'s Watchlist</h2>
+  
+    {% if listings %}
+        <h2>{{ user }}'s Watchlist</h2>
+    {% else %}
+        <h2>{{ user }}'s Watchlist is empty</h2>
+    {% endif %} 
 
     <!-- All Active listings here? -->
     <ul>
         {% for listing in listings %}
-            <li class="card">
-                {% if listing.image_url %}
-                    <img class="card-img-top" src="{{ listing.image_url }}" alt="{{ listing.title }}">
-                {% endif %}
-                <div class="card-body">
-                    <h5 class="card-title">{{ listing.title }}</h5>
-                    <p class="card-text">{{ listing.text_description }}</p>
-                    <a href="{% url 'listing' listing.id %}" class="btn btn-primary">Listing Details</a>
-                </div>
-            </li>
+            <div class="col-md-6">
+                <li class="card">
+                    {% if listing.image_url %}
+                        <img class="card-img-top" src="{{ listing.image_url }}" alt="{{ listing.title }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ listing.title }}</h5>
+                        <p class="card-text">{{ listing.text_description }}</p>
+                        {% if listing.highest_bid %}
+                            <p class="card-text">Highest Bid: {{ listing.highest_bid.amount }}$</p>
+                        {% else %}
+                            <p class="card-text">Starting Bid: {{ listing.starting_bid }}$</p>
+                        {% endif %}
+                        <a href="{% url 'listing' listing.id %}" class="btn btn-primary">Listing Details</a>
+                    </div>
+                </li>
+            </div>
         {% endfor %}
     </ul>
 {% endblock %}
