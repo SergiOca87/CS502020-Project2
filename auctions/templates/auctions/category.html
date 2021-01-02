@@ -7,7 +7,7 @@
     <div class="container">
         <div class="row">
             {% for listing in listings %}
-                {% if listing.is_active %}
+         
                     <div class="col-md-6">
                         <li class="card">
                             {% if listing.image_url %}
@@ -25,7 +25,7 @@
                             </div>
                         </li>
                     </div>
-                {% endif %}
+    
             {% endfor %}
         </div>
     </div>

@@ -75,13 +75,21 @@ def add(request):
         url = request.POST["url"]
         user = User.objects.get(id=request.POST["user_id"])
         category = request.POST["category"]
+        matching_category = ''
+
         f = Listing(title = title, text_description=description, starting_bid=bid, image_url=url, created_by=user)
-        c = Category(name = category)
         f.save()
-        c.save()
-        c.listings.add(f)
-        c.save()
-       
+
+        try:
+            matching_category = Category.objects.get(name = category)
+            matching_category.listings.add(f)
+            matching_category.save()
+        except Category.DoesNotExist:
+            matching_category = Category(name = category)
+            matching_category.save()
+            matching_category.listings.add(f)
+            matching_category.save()
+
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "auctions/add.html")
@@ -138,7 +146,7 @@ def listing(request, listing_id):
                         "comment_form": NewCommentForm(),
                         "comments": comments
                     })  
-                elif amount <= listing.highest_bid.amount :
+                elif listing.highest_bid and amount <= listing.highest_bid.amount :
                     return render(request, "auctions/listing.html", {
                         "listing": listing,
                         "created_by": listing.created_by,
